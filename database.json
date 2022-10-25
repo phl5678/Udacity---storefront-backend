@@ -1,0 +1,17 @@
+{
+  "dev": {
+    "driver": "pg",
+    "host": "localhost",
+    "database": "phl_store",
+    "user": "phl",
+    "password": "phl1234"
+  },
+  "test": {
+    "driver": "pg",
+    "host": "localhost",
+    "database": "phl_store_test",
+    "user": "phl",
+    "password": "phl1234"
+  },
+  "sql-file" : true
+}
