@@ -5,22 +5,72 @@ import { verifyAuthToken } from '../middlewares/auth';
 const store = new OrderStore();
 
 interface RequestQuery {
-  status?: string;
+  status?: OrderStatus;
+}
+interface OrderQuery {
+  user_id: number;
+  order_status: OrderStatus;
+  product_id: number;
+  product_name: string;
+  product_price: number;
+  quantity: number;
+}
+interface OrderProductShape {
+  product_id: number;
+  product_name: string;
+  product_price: number;
+  quantity: number;
 }
 
+interface OrderShape {
+  order_id: number;
+  order_status: OrderStatus;
+  user_id: number;
+  products: OrderProductShape[];
+}
 /**
  * This gets all orders for a given user or a list of orders by status for a given user if status query parameter is provided.
  * @param req http request. User ID is required. Status query parameter is optional. If provided, orders are filtered by status.
- * @param res http response. Returns order array.
+ * @param res http response. Returns array of custom order product info for the cart {order_id, order_status, user_id, products} 
+ * where products is an array of {product_id, product_name, product_price, quantity}.
  */
 const index4User = async (req: Request, res: Response): Promise<void> => {
   try {
-    const status = (req.query as unknown as RequestQuery).status as OrderStatus;
+    const status = (req.query as unknown as RequestQuery).status;
     const orders =
       status !== undefined
         ? await store.index4UserByStatus(parseInt(req.params.uid), status)
         : await store.index4User(parseInt(req.params.uid));
-    res.json(orders);
+
+    const updatedOrders: OrderShape[] = [];
+    if (orders.length > 0) {
+      let current_order_id = orders[0].order_id;
+      let products: OrderProductShape[] = [];
+      for (let i = 0; i < orders.length; i++) {
+        if (orders[i].product_id !== null) {
+          products.push({
+            product_id: orders[i].product_id,
+            product_name: orders[i].product_name,
+            product_price: orders[i].product_price,
+            quantity: orders[i].quantity,
+          });
+        }
+        if (
+          i + 1 === orders.length ||
+          current_order_id !== orders[i + 1].order_id
+        ) {
+          updatedOrders.push({
+            order_id: current_order_id,
+            order_status: orders[i].order_status as OrderStatus,
+            user_id: orders[i].user_id,
+            products: products,
+          });
+          products = [];
+          current_order_id = i + 1 < orders.length ? orders[i + 1].order_id : 0;
+        }
+      }
+    }
+    res.json(updatedOrders);
   } catch (err) {
     res.status(400);
     res.json((err as unknown as Error).message);
@@ -100,13 +150,37 @@ const addProduct = async (req: Request, res: Response): Promise<void> => {
 /**
  * This gets the products info for a given order.
  * @param req http request. Order ID is required in request parameter.
- * @param res http response. Returns the order info including id, quantity, product id, order id, product name, product price, product category,
+ * @param res http response. Returns the custom order info {order_id, order_status, user_id, products} where products is an array of 
+ * {product_id, product_name, product_price, quantity}
  */
 const showOrder = async (req: Request, res: Response): Promise<void> => {
   try {
     const order_id = parseInt(req.params.oid);
-    const result = await store.showOrder(order_id);
-    res.json(result);
+    const result: OrderQuery[] = await store.showOrder(order_id);
+
+    let updatedOrders: OrderShape | null = null;
+
+    if (result.length > 0) {
+      let products: OrderProductShape[] = [];
+      for (let i = 0; i < result.length; i++) {
+        products.push({
+          product_id: result[i].product_id,
+          product_name: result[i].product_name,
+          product_price: result[i].product_price,
+          quantity: result[i].quantity,
+        });
+        if (i + 1 === result.length) {
+          updatedOrders = {
+            order_id: order_id,
+            order_status: result[i].order_status as OrderStatus,
+            user_id: result[i].user_id,
+            products: products,
+          };
+          products = [];
+        }
+      }
+    }
+    res.json(updatedOrders);
   } catch (err) {
     res.status(400);
     res.json((err as unknown as Error).message);

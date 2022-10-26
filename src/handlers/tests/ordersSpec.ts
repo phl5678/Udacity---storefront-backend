@@ -349,7 +349,7 @@ describe('Orders Endpoint Testing', () => {
           .set('Accept', 'application/json');
         expect(response.status).toEqual(200);
         expect(response.headers['content-type']).toMatch(/json/);
-        expect(response.body.length).toEqual(2);
+        expect(response.body.products.length).toEqual(2);
       });
       it("should return 200 and 2 products. GET /users/:uid/orders/:oid/products with admin' token", async () => {
         const response = await request
@@ -358,7 +358,7 @@ describe('Orders Endpoint Testing', () => {
           .set('Accept', 'application/json');
         expect(response.status).toEqual(200);
         expect(response.headers['content-type']).toMatch(/json/);
-        expect(response.body.length).toEqual(2);
+        expect(response.body.products.length).toEqual(2);
       });
       it("should return 401. GET /users/:uid/orders/:oid/products with someone else' token", async () => {
         const response = await request

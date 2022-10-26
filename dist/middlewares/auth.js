@@ -2,25 +2,25 @@
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
-exports.__esModule = true;
+Object.defineProperty(exports, "__esModule", { value: true });
 exports.verifyAuthToken = exports.createAuthToken = void 0;
-var user_1 = require("../models/user");
-var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-var database_1 = require("../database");
+const user_1 = require("../models/user");
+const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
+const database_1 = require("../database");
 /**
  * This creates jwt authentication token.
  * @param user User object. Id, and email are required.
  * @returns the signed token or undefined if failed to sign.
  */
-var createAuthToken = function (user) {
+const createAuthToken = (user) => {
     try {
         if (user.id === undefined)
             throw new Error('user ID is required.');
-        return jsonwebtoken_1["default"].sign({ id: user.id, email: user.email, role: user.role }, database_1.TOKEN_SECRET);
+        return jsonwebtoken_1.default.sign({ id: user.id, email: user.email, role: user.role }, database_1.TOKEN_SECRET);
     }
     catch (err) {
         if (err instanceof Error) {
-            throw new Error("jwt.sign failed: ".concat(err.message));
+            throw new Error(`jwt.sign failed: ${err.message}`);
         }
     }
 };
@@ -37,17 +37,17 @@ exports.createAuthToken = createAuthToken;
  * @param res htpp response.
  * @param next express next function.
  */
-var verifyAuthToken = function (req, res, next) {
+const verifyAuthToken = (req, res, next) => {
     try {
-        var token = '';
-        var ary = [
+        let token = '';
+        const ary = [
             req.headers.authorization,
             req.headers['x-access-token'],
             req.body.token,
             req.query.token,
         ]; //handle all possible ways to get tokens.
         //The format for req.headers.authorization is 'Bearer <token>'. Need special string handling, see the i===0 case.
-        for (var i = 0; i < ary.length; i++) {
+        for (let i = 0; i < ary.length; i++) {
             if (token.length !== 0)
                 break;
             if (ary[i] === undefined)
@@ -56,8 +56,8 @@ var verifyAuthToken = function (req, res, next) {
         }
         if (token.length === 0)
             throw new Error('Token is missing.');
-        var decoded = jsonwebtoken_1["default"].verify(token, database_1.TOKEN_SECRET);
-        var decodedUser = decoded;
+        const decoded = jsonwebtoken_1.default.verify(token, database_1.TOKEN_SECRET);
+        const decodedUser = decoded;
         //Admin is the super user who can access any endpoints. Otherwise, end user can only access their own pages under /users/:uid/
         if (decodedUser.role === user_1.UserRole.Admin ||
             decodedUser.id === parseInt(req.params.uid)) {

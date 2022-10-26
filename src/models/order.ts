@@ -52,7 +52,7 @@ class OrderStore {
   > {
     try {
       const sql =
-        'SELECT a.id, b.product_id, c.name, c.price, b.quantity, a.user_id, a.status FROM orders as a LEFT JOIN order_products as b ON a.id=b.order_id LEFT JOIN products as c ON c.id = b.product_id WHERE a.user_id=($1)';
+        'SELECT a.id as order_id, b.product_id, c.name as product_name, c.price as product_price, b.quantity, a.user_id, a.status as order_status FROM orders as a LEFT JOIN order_products as b ON a.id=b.order_id LEFT JOIN products as c ON c.id = b.product_id WHERE a.user_id=($1) ORDER BY order_id ASC';
       const conn = await Client.connect();
       const result = await conn.query(sql, [userId]);
       conn.release();
@@ -84,7 +84,7 @@ class OrderStore {
   > {
     try {
       const sql =
-        'SELECT a.id, b.product_id, c.name,c.price, b.quantity, a.user_id, a.status FROM orders as a LEFT JOIN order_products as b ON a.id=b.order_id LEFT JOIN products as c ON c.id = b.product_id WHERE a.user_id=($1) and status=($2)';
+        'SELECT a.id as order_id, b.product_id, c.name as product_name,c.price as product_price, b.quantity, a.user_id, a.status as order_status FROM orders as a LEFT JOIN order_products as b ON a.id=b.order_id LEFT JOIN products as c ON c.id = b.product_id WHERE a.user_id=($1) and status=($2) ORDER BY order_id ASC';
       const conn = await Client.connect();
       const result = await conn.query(sql, [userId, status]);
       conn.release();
@@ -131,22 +131,22 @@ class OrderStore {
   /**
    * This gets one order info asynchronously.
    * @param orderId Order ID
-   * @returns a promise with array of customer order info containing line (order_products) ID, quantity, product id, name, price, category
+   * @returns a promise with array of customer order info containing quantity, product id, name, price, user ID and order status
    */
   async showOrder(orderId: number): Promise<
     {
-      id: number;
       quantity: number;
       product_id: number;
       order_id: number;
       product_name: string;
       product_price: number;
-      prodcut_category: string;
+      user_id: number;
+      order_status: OrderStatus;
     }[]
   > {
     try {
       const sql =
-        'SELECT * FROM order_products LEFT JOIN products ON products.id=order_products.product_id WHERE order_id=($1)';
+        'SELECT a.quantity, a.product_id, a.order_id, b.name as product_name, b.price as product_price, c.user_id, c.status as order_status FROM order_products as a LEFT JOIN products as b ON b.id=a.product_id INNER JOIN orders as c ON c.id = a.order_id WHERE order_id=($1)';
       const conn = await Client.connect();
       const result = await conn.query(sql, [orderId]);
       conn.release();
