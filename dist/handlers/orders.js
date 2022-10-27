@@ -71,6 +71,30 @@ const create4User = async (req, res) => {
     }
 };
 /**
+ * This updates the status of an order.
+ * @param req http request. status is required in the request body.
+ * @param res http response. Return the order object.
+ */
+const updateStatus = async (req, res) => {
+    try {
+        const status = req.body.status;
+        if (status === undefined || status.length === 0) {
+            throw new Error('Status is required.');
+        }
+        const order = {
+            id: parseInt(req.params.oid),
+            status: status,
+            user_id: parseInt(req.params.uid),
+        };
+        const result = await store.updateStatus(order);
+        res.json(result);
+    }
+    catch (err) {
+        res.status(400);
+        res.json(err.message);
+    }
+};
+/**
  * This adds a product and quantity to an active order. Throw error if the order is complete.
  * @param req http request. Order ID is required in request parameters. Quantity (positivie integer) and product ID (positive integer) are both required in the request body.
  * @param res http response. Returns the newly added products info for the given order.
@@ -146,10 +170,9 @@ const showOrder = async (req, res) => {
  * @param app express application
  */
 const orderRoutes = (app) => {
-    // app.get('/orders', verifyAuthToken, index);
-    // app.get('/orders/:oid', verifyAuthToken, show);
     app.get('/users/:uid/orders', auth_1.verifyAuthToken, index4User);
     app.post('/users/:uid/orders', auth_1.verifyAuthToken, create4User);
+    app.put('/users/:uid/orders/:oid', auth_1.verifyAuthToken, updateStatus);
     app.get('/users/:uid/orders/:oid/products', auth_1.verifyAuthToken, showOrder);
     app.post('/users/:uid/orders/:oid/products', auth_1.verifyAuthToken, addProduct);
 };

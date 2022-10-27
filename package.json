@@ -5,7 +5,7 @@
   "main": "server.ts",
   "scripts": {
     "start": "node src/server.ts",
-    "watch": "tsc-watch --esModuleInterop src/server.ts --outDir ./dist --onSuccess \"node ./dist/server.js\"",
+    "watch": "set ENV=dev && tsc-watch --esModuleInterop src/server.ts --outDir ./dist --onSuccess \"node ./dist/server.js\"",
     "prettier": "prettier --config .prettierrc --write src/**/*.ts --no-editorconfig",
     "lint": "eslint -c .eslintrc --fix src/**/*.ts",
     "build": "npx tsc",

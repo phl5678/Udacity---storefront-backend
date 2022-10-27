@@ -181,6 +181,30 @@ class OrderStore {
       );
     }
   }
+
+  /**
+   * This updates the order status for a order.
+   * @param o Order object. id, status, and user id are required.
+   * @returns a promise with Order object
+   */
+  async updateStatus(o: Order): Promise<Order> {
+    try {
+      if (o.id === undefined || o.id <= 0)
+        throw new Error('Order ID is required');
+
+      const sql = 'UPDATE orders SET status=($1) WHERE id=($2) RETURNING *';
+      const conn = await Client.connect();
+      const result = await conn.query(sql, [o.status, o.id]);
+      conn.release();
+      if (result.rows.length === 0)
+        throw new Error('Could not update order status.');
+      return result.rows[0];
+    } catch (err) {
+      throw new Error(
+        `Could not update order status for order ${o.id}. Error: ${err}`
+      );
+    }
+  }
 }
 
 export { Order, OrderStatus, OrderStore };

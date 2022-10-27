@@ -39,7 +39,7 @@ const show = async (req: Request, res: Response): Promise<void> => {
 /**
  * This creates a new user record if no existing email found, and creates authentication token.
  * @param req http request. expecting post body data for user info - email (required), password (required), first name, last name, and role. The role defaults to customer if not set.
- * @param res http response. send the signed token, user id, and email.
+ * @param res http response. send the signed token, user id, email, and role.
  */
 const create = async (req: Request, res: Response): Promise<void> => {
   try {
@@ -66,7 +66,12 @@ const create = async (req: Request, res: Response): Promise<void> => {
     };
     const result = await store.create(user);
     const token = createAuthToken(result);
-    res.json({ token: token, id: result.id, email: result.email });
+    res.json({
+      token: token,
+      id: result.id,
+      email: result.email,
+      role: result.role,
+    });
   } catch (err) {
     res.status(400);
     res.json(err);
@@ -99,7 +104,12 @@ const authenticate = async (req: Request, res: Response): Promise<void> => {
     if (token === undefined || token.length === 0) {
       throw new Error('createAuthToken failed.');
     }
-    res.json({ token: token, id: result.user.id, email: result.user.email });
+    res.json({
+      token: token,
+      id: result.user.id,
+      email: result.user.email,
+      role: result.user.role,
+    });
   } catch (err) {
     res.status(400);
     res.json(err);

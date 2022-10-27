@@ -31,7 +31,7 @@ interface OrderShape {
 /**
  * This gets all orders for a given user or a list of orders by status for a given user if status query parameter is provided.
  * @param req http request. User ID is required. Status query parameter is optional. If provided, orders are filtered by status.
- * @param res http response. Returns array of custom order product info for the cart {order_id, order_status, user_id, products} 
+ * @param res http response. Returns array of custom order product info for the cart {order_id, order_status, user_id, products}
  * where products is an array of {product_id, product_name, product_price, quantity}.
  */
 const index4User = async (req: Request, res: Response): Promise<void> => {
@@ -102,6 +102,31 @@ const create4User = async (req: Request, res: Response): Promise<void> => {
 };
 
 /**
+ * This updates the status of an order.
+ * @param req http request. status is required in the request body.
+ * @param res http response. Return the order object.
+ */
+const updateStatus = async (req: Request, res: Response): Promise<void> => {
+  try {
+    const status = req.body.status;
+    if (status === undefined || status.length === 0) {
+      throw new Error('Status is required.');
+    }
+
+    const order: Order = {
+      id: parseInt(req.params.oid),
+      status: status,
+      user_id: parseInt(req.params.uid),
+    };
+    const result = await store.updateStatus(order);
+    res.json(result);
+  } catch (err) {
+    res.status(400);
+    res.json((err as unknown as Error).message);
+  }
+};
+
+/**
  * This adds a product and quantity to an active order. Throw error if the order is complete.
  * @param req http request. Order ID is required in request parameters. Quantity (positivie integer) and product ID (positive integer) are both required in the request body.
  * @param res http response. Returns the newly added products info for the given order.
@@ -150,7 +175,7 @@ const addProduct = async (req: Request, res: Response): Promise<void> => {
 /**
  * This gets the products info for a given order.
  * @param req http request. Order ID is required in request parameter.
- * @param res http response. Returns the custom order info {order_id, order_status, user_id, products} where products is an array of 
+ * @param res http response. Returns the custom order info {order_id, order_status, user_id, products} where products is an array of
  * {product_id, product_name, product_price, quantity}
  */
 const showOrder = async (req: Request, res: Response): Promise<void> => {
@@ -192,11 +217,9 @@ const showOrder = async (req: Request, res: Response): Promise<void> => {
  * @param app express application
  */
 const orderRoutes = (app: express.Application) => {
-  // app.get('/orders', verifyAuthToken, index);
-  // app.get('/orders/:oid', verifyAuthToken, show);
-
   app.get('/users/:uid/orders', verifyAuthToken, index4User);
   app.post('/users/:uid/orders', verifyAuthToken, create4User);
+  app.put('/users/:uid/orders/:oid', verifyAuthToken, updateStatus);
   app.get('/users/:uid/orders/:oid/products', verifyAuthToken, showOrder);
   app.post('/users/:uid/orders/:oid/products', verifyAuthToken, addProduct);
 };
