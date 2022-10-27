@@ -14,7 +14,7 @@
     "devdown": "db-migrate --env dev down",
     "testdb-up": "db-migrate --env test up",
     "testdb-down": "db-migrate --env test down",
-    "jasmine": "set ENV=test && jasmine",
+    "jasmine": "jasmine",
     "test": "set ENV=test && db-migrate db:drop phl_store_test && db-migrate db:create phl_store_test && npm run testdb-up && npm run build && npm run jasmine"
   },
   "author": "Udacity",
